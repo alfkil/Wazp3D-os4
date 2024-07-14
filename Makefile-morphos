@@ -1,0 +1,46 @@
+#CC = gcc
+CC = ppc-morphos-gcc-2.95.3
+DEBUG = 0
+
+CFLAGS =  -DWAZP3DDEBUG -DMOTOROLAORDER -noixemul
+ifeq ($(DEBUG), 1)
+CFLAGS += -g
+else
+CFLAGS += -O3
+endif
+
+LDFLAGS = -noixemul
+LDFLAGS_LIB = $(LDFLAGS) -nostartfiles
+
+OBJS_68K = \
+	Wazp3D_lib_mos.o \
+	soft3d_opengl.o \
+	Wazp3D55.o
+	
+OBJS_PPC = \
+	Wazp3D_lib_mos_ppc.o \
+	soft3d_opengl.o \
+	Wazp3D55.o
+	
+all: Warp3D.library Warp3DPPC.library
+# Wazp3D-Prefs
+
+Warp3D.library: $(OBJS_68K)
+	$(CC) -o $@ $^ $(LDFLAGS_LIB)
+	cp $@ LIBS:$@
+
+Warp3DPPC.library: $(OBJS_PPC)
+	$(CC) -o $@ $^ $(LDFLAGS_LIB)
+	cp $@ LIBS:$@
+	
+Wazp3D_lib_mos_ppc.o: Wazp3D_lib_mos.c
+	$(CC) -c $(CFLAGS) -DWARP3DPPC -o $@ $<
+
+Wazp3D-Prefs: Wazp3D-Prefs.o 
+	$(CC) -o $@ $^ $(LDFLAGS)
+	
+dump: Warp3D.library
+	objdump --reloc --disassemble-all $^ > $^.dasm
+	
+clean:
+	rm -f $(OBJS_68K) $(OBJS_PPC)
